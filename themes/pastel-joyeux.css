@@ -1,0 +1,36 @@
+/* Thème « Pastel joyeux » pour Cadeaux en famille (option C retenue).
+   À brancher sur l'application Firebase existante : seules les couleurs,
+   polices et arrondis changent, pas le fonctionnement. */
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap");
+
+:root {
+  /* Fonds et texte */
+  --pj-bg: #fff6ef;          /* fond pêche très pâle */
+  --pj-card: #ffffff;        /* cartes */
+  --pj-line: #f5e4d9;        /* bordures (2px) */
+  --pj-nav: #ffffff;         /* barre d'onglets */
+  --pj-fg: #3b2a3f;          /* texte principal */
+  --pj-title: #5b2d6b;       /* titres (prune) */
+  --pj-muted: #8b7590;       /* texte secondaire */
+
+  /* Accents */
+  --pj-accent: #e0577a;      /* onglet actif, liens */
+  --pj-btn-bg: #5b2d6b;      /* boutons principaux */
+  --pj-btn-fg: #ffffff;
+
+  /* Pastilles */
+  --pj-xmas-bg: #ffdde4;  --pj-xmas-fg: #b02a4f;   /* Noël */
+  --pj-bday-bg: #e4f3ff;  --pj-bday-fg: #1e5f91;   /* anniversaires */
+  --pj-me-bg:   #ffdde4;  --pj-me-fg:   #b02a4f;   /* « Toi » */
+  --pj-badge-bg:#fff0c2;  --pj-badge-fg:#7a5600;   /* nombre d'idées */
+
+  /* Avatars */
+  --pj-adult-bg: #ede0ff; --pj-adult-fg: #5b2d6b;  /* adultes : lilas */
+  --pj-kid-bg:   #d9f4e6; --pj-kid-fg:   #1f7a4f;  /* enfants : menthe */
+
+  /* Formes et typo */
+  --pj-font: "Baloo 2", system-ui, sans-serif;
+  --pj-radius-card: 24px;
+  --pj-radius-chip: 999px;
+  --pj-border: 2px;
+}

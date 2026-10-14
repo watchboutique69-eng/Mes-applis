@@ -1,0 +1,16 @@
+{
+  "name": "Cadeaux en famille",
+  "short_name": "Cadeaux",
+  "description": "Listes d'envies, tirage au sort et anniversaires de la famille.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFF6EF",
+  "theme_color": "#FFF6EF",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

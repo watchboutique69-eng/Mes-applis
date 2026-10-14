@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// Règles de Cadeaux en famille.
+// Pas de comptes : l'accès à un espace famille se fait par son code
+// (identifiant du document `familles/{code}`), à garder pour la famille.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function validCode(code) {
+      return code.matches('^[a-z0-9-]{4,40}$');
+    }
+
+    match /familles/{famille} {
+      // Interdit de lister toutes les familles : il faut connaître le code.
+      allow list: if false;
+
+      match /members/{id} {
+        allow get, list: if validCode(famille);
+        allow create, update: if validCode(famille)
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 40;
+        allow delete: if validCode(famille);
+      }
+
+      match /wishes/{id} {
+        allow get, list: if validCode(famille);
+        allow create, update: if validCode(famille)
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0
+          && request.resource.data.title.size() <= 120
+          && request.resource.data.ownerId is string;
+        allow delete: if validCode(famille);
+      }
+
+      match /meta/{doc} {
+        allow read, write: if validCode(famille) && doc == 'draw';
+      }
+    }
+  }
+}

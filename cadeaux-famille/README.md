@@ -41,7 +41,8 @@ Pour que chacun l'utilise depuis son propre téléphone, activez le **mode parta
 2. Dans **Firestore Database**, créez une base (mode production).
 3. Dans **Paramètres du projet → Vos applications**, ajoutez une application Web et copiez l'objet `firebaseConfig`.
 4. Collez-le dans [`firebase-config.js`](firebase-config.js) à la place de `null`.
-5. Déployez les règles de sécurité fournies dans [`firestore.rules`](firestore.rules) (voir ci-dessous).
+5. Dans Firestore → **Règles**, autorisez l'accès aux documents `familles/{code}/...`
+   (à fusionner avec les règles existantes du projet, sans les remplacer).
 
 Au premier lancement, l'application demande un **code famille** (ex. `dupont-noel-2026`).
 Partagez ensuite le lien d'invitation (Réglages → « Copier le lien d'invitation ») avec la famille.
@@ -52,23 +53,21 @@ Partagez ensuite le lien d'invitation (Réglages → « Copier le lien d'invitat
 
 ## Héberger sur Firebase Hosting
 
-L'application contient déjà la configuration (`firebase.json`) et les règles Firestore (`firestore.rules`).
+L'application contient la configuration d'hébergement (`firebase.json`). Elle ne déploie volontairement
+**aucune règle Firestore**, pour ne jamais écraser celles d'un projet existant.
 
 ```bash
 npm install -g firebase-tools
 firebase login
 cd cadeaux-famille
 firebase use --add            # choisir votre projet Firebase
-firebase deploy --only hosting,firestore:rules
+firebase deploy --only hosting
 ```
 
 > ⚠️ Si une autre application est déjà en ligne sur ce projet, `firebase deploy --only hosting`
 > la **remplace**. Pour garder les deux, créez un second site
 > (console → Hosting → « Ajouter un autre site ») et ciblez-le :
 > `firebase target:apply hosting cadeaux <nom-du-site>` puis ajoutez `"target": "cadeaux"` dans `firebase.json`.
->
-> De même, `firestore.rules` remplace les règles existantes du projet : si une autre application utilise
-> la même base Firestore, fusionnez d'abord ses règles avec celles-ci.
 
 ## Tests
 

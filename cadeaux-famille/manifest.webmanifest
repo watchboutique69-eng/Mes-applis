@@ -1,0 +1,14 @@
+{
+  "name": "Cadeaux en famille",
+  "short_name": "Cadeaux",
+  "description": "Listes d'envies partagées, réservations secrètes et tirage au sort.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbf7f2",
+  "theme_color": "#b3261e",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cadeaux en famille</title>
+  <meta name="description" content="Listes d'envies partagées, réservations secrètes et tirage au sort pour les cadeaux en famille.">
+  <meta name="theme-color" content="#b3261e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1><span aria-hidden="true">🎁</span> Cadeaux en famille</h1>
+    <div class="topbar-actions">
+      <button id="me-button" class="chip" hidden></button>
+      <button id="settings-button" class="icon-button" title="Réglages" aria-label="Réglages">⚙️</button>
+    </div>
+  </header>
+
+  <nav id="tabs" class="tabs" hidden>
+    <button data-tab="mine">Ma liste</button>
+    <button data-tab="family">Famille</button>
+    <button data-tab="gifts">À offrir</button>
+    <button data-tab="draw">Tirage</button>
+  </nav>
+
+  <main id="app" aria-live="polite">
+    <p class="empty">Chargement…</p>
+  </main>
+
+  <dialog id="dialog"></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

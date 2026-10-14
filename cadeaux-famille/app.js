@@ -1,5 +1,6 @@
 import { createStore, isShared } from "./storage.js";
 import { drawPairs } from "./draw.js";
+import { upcomingEvents, formatCountdown } from "./events.js";
 
 const EMOJIS = ["🎅", "🤶", "🧑", "👩", "👨", "👧", "👦", "👶", "👵", "👴", "🐱", "🐶", "🦊", "🐻", "🦄", "⭐"];
 const PRIORITIES = { 3: "Très envie", 2: "Envie", 1: "Si possible" };
@@ -79,9 +80,11 @@ function memberLabel(id) {
 function me() {
   return member(readLocal(LS.me));
 }
-function wishesOf(ownerId) {
+// La personne concernée ne voit ni les idées suggérées par les autres, ni
+// celles qu'elle a retirées. Les autres voient les suggestions, pas les retraits.
+function wishesOf(ownerId, { forOwner = false } = {}) {
   return state.wishes
-    .filter((w) => w.ownerId === ownerId)
+    .filter((w) => w.ownerId === ownerId && !w.removed && !(forOwner && w.suggestedBy))
     .sort((a, b) => (b.priority || 0) - (a.priority || 0) || (a.createdAt || 0) - (b.createdAt || 0));
 }
 
@@ -149,12 +152,20 @@ function wishCard(wish, { owner }) {
   let actions = "";
   let status = "";
 
-  if (owner) {
-    actions = `
+  const editable = owner || wish.suggestedBy === meId;
+  const editButtons = `
       <button class="ghost" data-edit-wish="${wish.id}">Modifier</button>
       <button class="ghost danger" data-delete-wish="${wish.id}">Supprimer</button>`;
+  const suggestion = !owner && wish.suggestedBy
+    ? `<span class="badge idea">💡 Idée de ${wish.suggestedBy === meId ? "vous" : memberLabel(wish.suggestedBy)}</span>` : "";
+
+  if (owner) {
+    actions = editButtons;
+  } else if (wish.removed) {
+    status = `<span class="badge warn">⚠️ ${esc(member(wish.ownerId)?.name || "La personne")} l'a retirée de sa liste</span>`;
+    actions = `<button class="ghost danger" data-delete-wish="${wish.id}">Retirer de mes cadeaux</button>`;
   } else if (!wish.reservedBy) {
-    actions = `<button class="primary" data-reserve="${wish.id}">🎁 Je l'offre</button>`;
+    actions = `<button class="primary" data-reserve="${wish.id}">🎁 Je l'offre</button>${editable ? editButtons : ""}`;
   } else if (wish.reservedBy === meId) {
     status = `<span class="badge mine">${wish.bought ? "✅ Acheté par vous" : "🔒 Réservé par vous"}</span>`;
     actions = `
@@ -173,6 +184,7 @@ function wishCard(wish, { owner }) {
         <div class="wish-meta">
           ${wish.priority ? `<span class="prio p${wish.priority}">${"★".repeat(wish.priority)} ${PRIORITIES[wish.priority]}</span>` : ""}
           ${formatPrice(wish.price) ? `<span>${formatPrice(wish.price)}</span>` : ""}
+          ${suggestion}
           ${status}
         </div>
         ${wish.note ? `<p class="wish-note">${esc(wish.note)}</p>` : ""}
@@ -182,14 +194,14 @@ function wishCard(wish, { owner }) {
 }
 
 function renderMine(current) {
-  const list = wishesOf(current.id);
+  const list = wishesOf(current.id, { forOwner: true });
   app.innerHTML = `
     <section>
       <div class="section-head">
         <h2>Ma liste d'envies</h2>
         <button class="primary" data-action="add-wish">+ Ajouter</button>
       </div>
-      <p class="muted small">Vous ne voyez pas qui a réservé quoi : la surprise est préservée.</p>
+      <p class="muted small">Vous ne voyez ni qui a réservé quoi, ni les idées suggérées par les autres : la surprise est préservée.</p>
       ${list.length
         ? `<ul class="wishes">${list.map((w) => wishCard(w, { owner: true })).join("")}</ul>`
         : `<p class="empty">Votre liste est vide. Ajoutez vos premières idées !</p>`}
@@ -206,8 +218,10 @@ function renderFamily(current) {
         <button class="link" data-back>← Toute la famille</button>
         <div class="section-head">
           <h2>${target.emoji} Liste de ${esc(target.name)}</h2>
+          <button class="ghost" data-suggest="${target.id}">💡 Suggérer</button>
         </div>
-        <p class="muted small">${list.length} idée(s), ${free} encore disponible(s). ${esc(target.name)} ne voit pas les réservations.</p>
+        <p class="muted small">${list.length} idée(s), ${free} encore disponible(s).
+        ${esc(target.name)} ne voit ni les réservations, ni les idées suggérées.</p>
         ${list.length
           ? `<ul class="wishes">${list.map((w) => wishCard(w, { owner: false })).join("")}</ul>`
           : `<p class="empty">${esc(target.name)} n'a encore rien ajouté.</p>`}
@@ -216,8 +230,20 @@ function renderFamily(current) {
   }
 
   const others = state.members.filter((m) => m.id !== current.id);
+  const events = upcomingEvents(state.members);
   app.innerHTML = `
     <section>
+      <div class="card events">
+        <h3>Prochaines occasions</h3>
+        <ul>
+          ${events.map((e) => `
+            <li>
+              <span>${e.emoji} ${esc(e.label)}${e.age ? ` (${e.age} ans)` : ""}</span>
+              <span class="${e.days <= 14 ? "soon" : "muted"}">${formatCountdown(e.days)}</span>
+            </li>`).join("")}
+        </ul>
+        ${state.members.some((m) => m.birthday) ? "" : `<p class="muted small">Ajoutez les dates d'anniversaire dans les réglages ⚙️.</p>`}
+      </div>
       <h2>La famille</h2>
       ${others.length ? `
         <div class="grid">
@@ -331,16 +357,19 @@ function openDialog(html, onSubmit) {
   if (!dialog.open) dialog.showModal();
 }
 
-function openWishDialog(wish) {
+// `forMemberId` : suggérer une idée pour quelqu'un d'autre (invisible pour lui).
+function openWishDialog(wish, forMemberId = null) {
   const editing = Boolean(wish);
   wish = wish || { priority: 2 };
+  const target = forMemberId && member(forMemberId);
   openDialog(`
     <form method="dialog" class="stack">
-      <h2>${editing ? "Modifier l'idée" : "Nouvelle idée cadeau"}</h2>
+      <h2>${editing ? "Modifier l'idée" : target ? `Idée pour ${esc(target.name)}` : "Nouvelle idée cadeau"}</h2>
+      ${target ? `<p class="muted small">${esc(target.name)} ne verra pas cette idée. Les autres pourront la réserver.</p>` : ""}
       <label>Quoi ? <input name="title" required maxlength="120" value="${esc(wish.title)}" placeholder="Ex. Un livre de cuisine"></label>
       <label>Lien (optionnel) <input name="url" type="url" value="${esc(wish.url)}" placeholder="https://…"></label>
       <label>Prix indicatif en € (optionnel) <input name="price" type="number" min="0" step="0.01" inputmode="decimal" value="${wish.price ?? ""}"></label>
-      <label>Envie
+      <label>${target || wish.suggestedBy ? "Intérêt estimé" : "Envie"}
         <select name="priority">
           ${[3, 2, 1].map((p) => `<option value="${p}" ${wish.priority === p ? "selected" : ""}>${"★".repeat(p)} ${PRIORITIES[p]}</option>`).join("")}
         </select>
@@ -361,7 +390,11 @@ function openWishDialog(wish) {
     };
     if (!fields.title) return false;
     if (editing) run(() => store.update("wishes", wish.id, fields), "Idée modifiée");
-    else run(() => store.add("wishes", { ...fields, ownerId: me().id, createdAt: Date.now(), reservedBy: null, bought: false }), "Idée ajoutée");
+    else {
+      const extra = target ? { ownerId: target.id, suggestedBy: me().id } : { ownerId: me().id };
+      run(() => store.add("wishes", { ...fields, ...extra, createdAt: Date.now(), reservedBy: null, bought: false }),
+        target ? "Idée suggérée en secret" : "Idée ajoutée");
+    }
   });
 }
 
@@ -374,7 +407,10 @@ function openMembersDialog() {
         ${state.members.map((m) => `
           <li>
             <button type="button" class="emoji-button" data-cycle-emoji="${m.id}" title="Changer l'emoji">${m.emoji}</button>
-            <input value="${esc(m.name)}" data-rename="${m.id}" maxlength="40" aria-label="Prénom">
+            <div class="member-fields">
+              <input value="${esc(m.name)}" data-rename="${m.id}" maxlength="40" aria-label="Prénom de ${esc(m.name)}">
+              <label class="small muted">🎂 <input type="date" value="${esc(m.birthday)}" data-birthday="${m.id}" aria-label="Anniversaire de ${esc(m.name)}"></label>
+            </div>
             ${m.id === current ? `<span class="muted small">(vous)</span>`
               : `<button type="button" class="ghost danger" data-delete-member="${m.id}" aria-label="Supprimer">✕</button>`}
           </li>`).join("")}
@@ -500,9 +536,13 @@ document.addEventListener("click", (event) => {
   if (d.editWish) return openWishDialog(wishById(d.editWish));
   if (d.deleteWish) {
     const w = wishById(d.deleteWish);
-    if (w && confirm(`Supprimer « ${w.title} » ?`)) run(() => store.remove("wishes", w.id), "Idée supprimée");
-    return;
+    if (!w || !confirm(`Supprimer « ${w.title} » ?`)) return;
+    // Si quelqu'un d'autre l'a déjà réservée, on la masque seulement pour
+    // que la personne qui l'offre soit prévenue au lieu de la perdre de vue.
+    const keepForGiver = w.reservedBy && w.reservedBy !== meId;
+    return run(() => (keepForGiver ? store.update("wishes", w.id, { removed: true }) : store.remove("wishes", w.id)), "Idée supprimée");
   }
+  if (d.suggest) return openWishDialog(null, d.suggest);
   if (d.reserve) return run(() => store.update("wishes", d.reserve, { reservedBy: meId, bought: false }), "Réservé ! Personne d'autre ne l'offrira.");
   if (d.unreserve) return run(() => store.update("wishes", d.unreserve, { reservedBy: null, bought: false }), "Réservation annulée");
   if (d.bought) {
@@ -543,6 +583,9 @@ document.addEventListener("click", (event) => {
 
 document.addEventListener("change", (event) => {
   const el = event.target;
+  if ("birthday" in el.dataset) {
+    run(() => store.update("members", el.dataset.birthday, { birthday: el.value || null }));
+  }
   if (el.dataset.rename) {
     const name = el.value.trim();
     if (name) run(() => store.update("members", el.dataset.rename, { name }));

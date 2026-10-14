@@ -1,6 +1,6 @@
 // Service worker : met en cache l'application pour un démarrage rapide et
 // hors ligne. Les données (Firebase) passent toujours par le réseau.
-const CACHE = "cadeaux-famille-v1";
+const CACHE = "cadeaux-famille-v2";
 const ASSETS = [
   "./",
   "index.html",
@@ -8,6 +8,7 @@ const ASSETS = [
   "app.js",
   "storage.js",
   "draw.js",
+  "events.js",
   "firebase-config.js",
   "manifest.webmanifest",
   "icon.svg",

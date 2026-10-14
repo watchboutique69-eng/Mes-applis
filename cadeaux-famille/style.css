@@ -245,3 +245,20 @@ dialog::backdrop { background: rgb(0 0 0 / 0.45); }
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.2);
   z-index: 10;
 }
+
+.badge.idea { background: #fff1c9; color: #7a5200; }
+.badge.warn { background: #fde3e1; color: var(--accent); }
+@media (prefers-color-scheme: dark) {
+  .badge.idea { background: #3a3018; color: var(--gold); }
+  .badge.warn { background: #3d2220; }
+}
+
+.events h3 { margin-top: 0; }
+.events ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.events li { display: flex; justify-content: space-between; gap: 0.75rem; }
+.events .soon { color: var(--accent); font-weight: 600; white-space: nowrap; }
+.events .muted { white-space: nowrap; }
+
+.member-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.stack .member-fields label { flex-direction: row; align-items: center; gap: 0.4rem; font-weight: 400; }
+.member-fields input[type="date"] { padding: 0.3rem 0.5rem; }

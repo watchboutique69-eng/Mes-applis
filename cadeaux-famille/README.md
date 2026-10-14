@@ -7,7 +7,11 @@ Application web (installable sur téléphone) pour organiser les cadeaux en fami
 - **Ma liste** : chacun note ses envies (lien, prix indicatif, niveau d'envie, précisions).
 - **Famille** : on consulte les listes des autres et on clique sur « Je l'offre » pour réserver une idée.
   Les autres voient qu'elle est prise (fini les doublons), mais **la personne concernée ne voit jamais les réservations**.
+- **Idées secrètes** : « 💡 Suggérer » ajoute une idée sur la liste de quelqu'un d'autre ; elle est visible et réservable
+  par toute la famille, sauf par la personne concernée.
+- **Prochaines occasions** : compte à rebours jusqu'à Noël et aux anniversaires (dates à saisir dans les réglages).
 - **À offrir** : récapitulatif de ses réservations par destinataire, case « acheté » et budget estimé.
+  Si quelqu'un retire de sa liste une idée que vous aviez réservée, vous en êtes averti ici.
 - **Tirage** : tirage au sort façon Père Noël secret, avec exclusions (ex. les couples). Chacun ne voit que son résultat.
 - Gestion des membres (prénom + emoji), export/import des données en JSON, mode sombre, fonctionne hors ligne.
 
@@ -72,5 +76,6 @@ node --test tests/*.test.mjs
 | `app.js` | Interface et logique de l'application |
 | `storage.js` | Stockage local (localStorage) ou partagé (Firestore) |
 | `draw.js` | Algorithme du tirage au sort |
+| `events.js` | Calcul des prochaines occasions (Noël, anniversaires) |
 | `firebase-config.js` | Configuration Firebase optionnelle |
 | `sw.js`, `manifest.webmanifest`, `icon.svg` | Installation sur téléphone et hors ligne |
